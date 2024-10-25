@@ -40,43 +40,37 @@ class Server:
         return self.__indexed_dataset
 
     def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-        '''Get the data for a given hypermedia pagination'''
-        assert isinstance(index, int) and isinstance(page_size, int)
-        assert 0 <= index < len(self.indexed_dataset())
+        """Return a dictionary with pagination info and data, handling deleted indices.
+        
+        Args:
+            index: Starting index for pagination
+            page_size: Number of records per page
+            
+        Returns:
+            Dict containing:
+            - index: Current start index
+            - next_index: Next index to query
+            - page_size: Size of page
+            - data: List of actual data
+        """
+        # Validate inputs
+        assert isinstance(index, int) and index is not None
+        assert isinstance(page_size, int) and page_size > 0
+        dataset = self.indexed_dataset()
+        dataset_size = len(dataset)
+        assert 0 <= index < dataset_size
 
         data = []
-        current_index = index
-        items_collected = 0
-
-        while (items_collected < page_size and
-               current_index < len(self.indexed_dataset())):
-            item = self.indexed_dataset().get(current_index)
-            if item is not None:
-                data.append(item)
-                items_collected += 1
-            current_index += 1
+        next_index = index
+        # Keep collecting data until we have page_size items
+        while len(data) < page_size and next_index < dataset_size:
+            if next_index in dataset:
+                data.append(dataset[next_index])
+            next_index += 1
 
         return {
             'index': index,
-            'data': data,
+            'next_index': next_index,
             'page_size': page_size,
-            'next_index': current_index
+            'data': data
         }
-
-# def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
-#     '''Get the data for a given hypermedia pagination'''
-#     isinstance(page_size, int)
-#     assert 0 <= index < len(self.indexed_dataset())
-#     data = []
-#     next_index = index + page_size
-#     for i in range(index, next_index):
-#         if self.indexed_dataset().get(i):
-#             data.append(self.indexed_dataset()[i])
-#         else:
-#             next_index += 1
-#     return {
-#         'index': index,
-#         'data': data,
-#         'page_size': page_size,
-#         'next_index': next_index
-#     }
